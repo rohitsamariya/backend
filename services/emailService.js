@@ -30,8 +30,8 @@ const getTransporter = () => {
  */
 const sendLifecycleEmail = async (user, type, subject, html, attachments = []) => {
     try {
-        // 1. Prevent Duplicates for same type (except REMINDER and INVITE)
-        const skipTypes = ['REMINDER', 'INVITE'];
+        // 1. Prevent Duplicates for same type (except REMINDER, INVITE, and RESET_PASSWORD)
+        const skipTypes = ['REMINDER', 'INVITE', 'RESET_PASSWORD'];
         if (!skipTypes.includes(type) && user.emailHistory && user.emailHistory.some(h => h.emailType === type && h.status === 'SUCCESS')) {
             console.log(`Email type ${type} already sent to ${user.email}. Skipping.`);
             return;
@@ -40,9 +40,9 @@ const sendLifecycleEmail = async (user, type, subject, html, attachments = []) =
         const transporter = getTransporter();
 
         const message = {
-            from: process.env.SMTP_USER || 'noreply@cortexaglobal.com',
+            from: `"${process.env.FROM_NAME || 'HRMS Company'}" <${process.env.SMTP_USER}>`,
             to: user.email,
-            replyTo: process.env.SMTP_USER || 'noreply@cortexaglobal.com',
+            replyTo: process.env.SMTP_USER,
             subject: subject || 'HR Notification',
             html: html,
             attachments: attachments

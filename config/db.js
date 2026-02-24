@@ -22,16 +22,17 @@ const connectDB = async () => {
             console.error(`❌ MongoDB connection failed:`, error.message);
 
             // Fallback: If SRV is blocked, try direct connection to shards
-            if (error.message.includes('ECONNREFUSED') || error.message.includes('querySrv') || error.message.includes('timeout')) {
-                console.log('⚠️ SRV/DNS issue detected. Attempting direct shard fallback...');
+            const errMsg = error.message.toLowerCase();
+            if (errMsg.includes('econnrefused') || errMsg.includes('querysrv') || errMsg.includes('timeout') || errMsg.includes('timed out')) {
+                console.log('⚠️ SRV/DNS/Timeout issue detected. Attempting direct shard fallback...');
                 try {
-                    // This fallback URI is specific to your Atlas Cluster and bypasses the DNS SRV issues
-                    const fallbackUri = 'mongodb://hrmsuser:j6jTgFYcflQgEq32@ac-gdvbveo-shard-00-00.akr9n7d.mongodb.net:27017,ac-gdvbveo-shard-00-01.akr9n7d.mongodb.net:27017,ac-gdvbveo-shard-00-02.akr9n7d.mongodb.net:27017/hrms_attendance?ssl=true&authSource=admin&replicaSet=atlas-gdvbveo-shard-0&retryWrites=true&w=majority';
+                    // Fallback to the specific shard that we know worked for migration
+                    const fallbackUri = 'mongodb://hrmsuser:j6jTgFYcflQgEq32@ac-gdvbveo-shard-00-02.akr9n7d.mongodb.net:27017/hrms_attendance?ssl=true&authSource=admin&directConnection=true';
                     const conn = await mongoose.connect(fallbackUri, connOptions);
-                    console.log(`✅ MongoDB connected via Fallback (Direct Shard)`);
+                    console.log(`✅ MongoDB connected via Fallback (Direct Shard 02)`);
                     return;
                 } catch (fallbackErr) {
-                    console.error(`❌ Fallback connection also failed:`, fallbackErr.message);
+                    console.error(`❌ Fallback (Shard 02) failed:`, fallbackErr.message);
                 }
             }
 

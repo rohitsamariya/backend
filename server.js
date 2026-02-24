@@ -9,6 +9,14 @@ const connectDB = require('./config/db');
 // 1. Environment Handling
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
+} else {
+    // Security Hardening: Ensure required configs are present in production
+    const requiredEnv = ['JWT_SECRET', 'MONGO_URI', 'SMTP_USER', 'SMTP_PASS'];
+    const missingEnv = requiredEnv.filter(key => !process.env[key]);
+    if (missingEnv.length > 0) {
+        console.error(`FATAL ERROR: Missing required environment variables: ${missingEnv.join(', ')}`);
+        process.exit(1);
+    }
 }
 
 // 2. Connect to Database

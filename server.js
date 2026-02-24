@@ -62,7 +62,6 @@ app.use('/api/', limiter);
 // CORS Configuration
 const allowedOrigins = [
     'http://localhost:5173',
-    'https://hrms-backend.onrender.com', // Placeholder for production
     process.env.FRONTEND_URL
 ].filter(Boolean);
 

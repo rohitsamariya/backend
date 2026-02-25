@@ -81,7 +81,7 @@ exports.createInvite = async (req, res) => {
             try {
                 const position = role || 'Employee';
                 const html = generateInviteEmail(name, position, registrationLink);
-                await sendLifecycleEmail(user, 'INVITE', 'You’re Invited to Join HRMS Company', html);
+                await sendLifecycleEmail(user, 'INVITE', `You’re Invited to Join ${process.env.FROM_NAME || 'HRMS Company'}`, html);
             } catch (err) {
                 console.error('Background Invite Email Dispatch Failed:', err);
             }
@@ -170,7 +170,7 @@ exports.resendInvite = async (req, res) => {
         setImmediate(async () => {
             try {
                 const html = generateInviteEmail(invite.name, invite.role || 'Employee', registrationLink);
-                await sendLifecycleEmail(user, 'INVITE', 'Reminder: You’re Invited to Join HRMS Company', html);
+                await sendLifecycleEmail(user, 'INVITE', `Reminder: You’re Invited to Join ${process.env.FROM_NAME || 'HRMS Company'}`, html);
             } catch (e) {
                 console.error('Resend invite failed:', e);
             }

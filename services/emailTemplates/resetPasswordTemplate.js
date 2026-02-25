@@ -12,7 +12,7 @@ const generateResetPasswordEmail = (name, resetLink) => {
             </div>
             <div style="padding: 24px; color: #374151; line-height: 1.6;">
                 <p>Hello <strong>${name}</strong>,</p>
-                <p>We received a request to reset your password for your HRMS account. Click the button below to set a new password:</p>
+                <p>We received a request to reset your password for your ${process.env.FROM_NAME || 'HRMS'} account. Click the button below to set a new password:</p>
                 
                 <div style="text-align: center; margin: 32px 0;">
                     <a href="${resetLink}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Reset Password</a>
@@ -28,7 +28,7 @@ const generateResetPasswordEmail = (name, resetLink) => {
                 </p>
             </div>
             <div style="background-color: #f9fafb; padding: 16px; text-align: center; font-size: 12px; color: #6b7280;">
-                &copy; ${new Date().getFullYear()} HRMS System. All rights reserved.
+                &copy; ${new Date().getFullYear()} ${process.env.FROM_NAME || 'HRMS System'}. All rights reserved.
             </div>
         </div>
     `;

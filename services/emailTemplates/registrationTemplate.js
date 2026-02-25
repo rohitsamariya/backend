@@ -19,7 +19,7 @@ const generateRegistrationEmail = (name, loginLink) => {
         </div>
         <div class="content">
             <p>Hello ${name},</p>
-            <p>Your account at HRMS Company has been created successfully!</p>
+            <p>Your account at ${process.env.FROM_NAME || 'HRMS Company'} has been created successfully!</p>
             <p>To access your personal dashboard and manage your work, please use the login link below:</p>
             <p style="text-align: center;">
                 <a href="${loginLink}" class="button">Log In to Your Account</a>
@@ -27,7 +27,7 @@ const generateRegistrationEmail = (name, loginLink) => {
             <p>Welcome to the family!</p>
         </div>
         <div class="footer">
-            <p>&copy; 2026 HRMS Company. All rights reserved.</p>
+            <p>&copy; 2026 ${process.env.FROM_NAME || 'HRMS Company'}. All rights reserved.</p>
         </div>
     </div>
 </body>

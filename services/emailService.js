@@ -112,8 +112,9 @@ const sendLifecycleEmail = async (user, type, subject, html, attachments = []) =
  */
 const sendEmail = async (options) => {
     const transporter = getTransporter();
+    const fromName = process.env.FROM_NAME || 'HRMS Company';
     const message = {
-        from: `"HRMS Company" <${process.env.SMTP_USER || 'noreply@hrmscompany.com'}>`,
+        from: `"${fromName}" <${process.env.SMTP_USER || 'noreply@hrmscompany.com'}>`,
         to: options.email,
         subject: options.subject,
         text: options.message,
@@ -124,7 +125,7 @@ const sendEmail = async (options) => {
 const sendWelcomeEmail = async (user, branch, shift) => {
     const { generateWelcomeEmail } = require('./emailTemplates/welcomeTemplate');
     const html = generateWelcomeEmail(user, branch, shift);
-    await sendLifecycleEmail(user, 'COMPLETION', 'Welcome to HRMS Company – Onboarding Complete', html);
+    await sendLifecycleEmail(user, 'COMPLETION', `Welcome to ${process.env.FROM_NAME || 'HRMS Company'} – Onboarding Complete`, html);
 };
 
 const sendOfferInvite = async (invite, registrationLink, branchName, shiftName) => {
@@ -239,7 +240,7 @@ const sendAutoCheckoutEmail = async (user, dateStr, checkOutTimeStr) => {
                 <p>Please remember to check out at the end of your shift moving forward.</p>
             </div>
             <div style="background-color: #f9fafb; padding: 10px; text-align: center; font-size: 12px; color: #6b7280;">
-                &copy; HRMS System
+                &copy; ${process.env.FROM_NAME || 'HRMS Company'}
             </div>
         </div>
     `;

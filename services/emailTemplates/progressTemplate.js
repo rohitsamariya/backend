@@ -16,7 +16,7 @@ const generateProgressSavedEmail = (name, stepName, stepNumber, resumeLink) => {
             
             <br>
             <p>Best Regards,</p>
-            <p><strong>HRMS Company Team</strong></p>
+            <p><strong>${process.env.FROM_NAME || 'HRMS Company'} Team</strong></p>
         </div>
     `;
 };

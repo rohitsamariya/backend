@@ -29,7 +29,7 @@ const generateStepCompletionEmail = (name, stepName, stepsRemaining, resumeLink)
             <p>Keep going!</p>
         </div>
         <div class="footer">
-            <p>&copy; 2026 HRMS Company. All rights reserved.</p>
+            <p>&copy; 2026 ${process.env.FROM_NAME || 'HRMS Company'}. All rights reserved.</p>
         </div>
     </div>
 </body>

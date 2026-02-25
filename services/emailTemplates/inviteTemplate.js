@@ -15,15 +15,15 @@ const generateInviteEmail = (name, position, registrationLink) => {
 <body>
     <div class="container">
         <div class="header">
-            <h2>Welcome to HRMS Company</h2>
+            <h2>Welcome to ${process.env.FROM_NAME || 'HRMS Company'}</h2>
         </div>
         <div class="content">
             <p>Hello ${name},</p>
-            <p>We are excited to invite you to join our team as a <strong>${position}</strong> at HRMS Company!</p>
+            <p>We are excited to invite you to join our team as a <strong>${position}</strong> at ${process.env.FROM_NAME || 'HRMS Company'}!</p>
             <p>To begin your onboarding process and set up your account, please click the button below:</p>
             
             <div style="text-align: center; margin: 30px 0;">
-                <a href="${registrationLink}" style="background-color: #4f46e5; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Join HRMS Company</a>
+                <a href="${registrationLink}" style="background-color: #4f46e5; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Join ${process.env.FROM_NAME || 'HRMS Company'}</a>
             </div>
             
             <p>This link will expire in 24 hours.</p>
@@ -31,10 +31,10 @@ const generateInviteEmail = (name, position, registrationLink) => {
             <p style="color: #666; font-size: 12px;">${registrationLink}</p>
             
             <p>Best Regards,</p>
-            <p><strong>HRMS Company Team</strong></p>
+            <p><strong>${process.env.FROM_NAME || 'HRMS Company'} Team</strong></p>
         </div>
         <div style="text-align: center; padding: 20px; font-size: 12px; color: #666;">
-            <p>&copy; 2026 HRMS Company. All rights reserved.</p>
+            <p>&copy; 2026 ${process.env.FROM_NAME || 'HRMS Company'}. All rights reserved.</p>
         </div>
     </div>
 </body>

@@ -31,7 +31,7 @@ const generateReminderEmail = (name, completedCount, remainingCount, resumeLink)
             <p>If you face any technical issues, please reach out to the HR Helpdesk.</p>
         </div>
         <div class="footer">
-            <p>&copy; 2026 HRMS Company. All rights reserved.</p>
+            <p>&copy; 2026 ${process.env.FROM_NAME || 'HRMS Company'}. All rights reserved.</p>
         </div>
     </div>
 </body>

@@ -298,7 +298,7 @@ exports.saveStep7 = async (req, res) => {
                     path: pdfPath
                 }];
 
-                await sendLifecycleEmail(user, 'COMPLETION', 'Welcome to HRMS Company – Onboarding Complete', html, attachments);
+                await sendLifecycleEmail(user, 'COMPLETION', `Welcome to ${process.env.FROM_NAME || 'HRMS Company'} – Onboarding Complete`, html, attachments);
             } catch (e) {
                 console.error('Background Completion tasks failed:', e);
             }

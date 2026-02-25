@@ -158,16 +158,16 @@ exports.getUsers = async (req, res) => {
 
         if (status === 'active') {
             query.isActive = true;
-            query.status = { $ne: 'ONBOARDING' }; // Exclude onboarding users from active list
+            query.status = { $nin: ['ONBOARDING', 'INVITED'] }; // Exclude onboarding and invited users from active list
         } else if (status === 'deactivated') {
             query.isActive = false;
         } else if (status === 'onboarding') {
             query.status = 'ONBOARDING';
             query.onboardingCompleted = false;
         } else {
-            // Default to active, excluding onboarding
+            // Default to active, excluding onboarding and invited
             query.isActive = true;
-            query.status = { $ne: 'ONBOARDING' };
+            query.status = { $nin: ['ONBOARDING', 'INVITED'] };
         }
 
         if (role) query.role = role;

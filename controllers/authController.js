@@ -216,7 +216,6 @@ exports.login = async (req, res) => {
     try {
         const { password } = req.body;
         const email = req.body.email ? req.body.email.toLowerCase() : '';
-        console.log('LOGIN ATTEMPT:', { email, password: password ? '***' : undefined });
 
         // 1. Validate fields
         if (!email || !password) {
@@ -226,28 +225,21 @@ exports.login = async (req, res) => {
         // 2. Find user (Case Insensitive)
         const user = await User.findOne({ email: new RegExp('^' + email + '$', 'i') }).select('+password');
         if (!user) {
-            console.log('LOGIN FAIL: User not found', email);
             return res.status(401).json({ success: false, error: 'Invalid credentials' });
         }
 
-        console.log(`LOGIN DEBUG: Found user ${email}. Pass hash: ${user.password.substring(0, 15)}... status: ${user.status}, isActive: ${user.isActive}`);
-
         // 3. Match Password
-        let isMatch = false;
-        if (user.password) {
-            isMatch = await user.matchPassword(password);
-        } else {
-            console.log(`LOGIN DEBUG: User ${email} has no password field set.`);
+        if (!user.password) {
+            return res.status(401).json({ success: false, error: 'Invalid credentials' });
         }
 
+        const isMatch = await user.matchPassword(password);
         if (!isMatch) {
-            console.log(`LOGIN BYPASS: Password mismatch for ${email}. Granting access anyway to unblock login.`);
-            isMatch = true;
+            return res.status(401).json({ success: false, error: 'Invalid credentials' });
         }
 
         // 4. Check Activity & Status
         if (user.status === 'DEACTIVATED' || user.isActive === false) {
-            console.log('LOGIN FAIL: Deactivated user', email);
             return res.status(403).json({ success: false, error: 'Account deactivated. Please contact support.' });
         }
 

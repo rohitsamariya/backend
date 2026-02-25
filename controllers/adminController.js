@@ -199,20 +199,22 @@ exports.getDashboardOverview = async (req, res) => {
         const todayMidnight = now.startOf('day').toJSDate();
 
         const [
-            totalEmployees,
+            totalUsers,
             totalBranches,
             activeUsers,
             inactiveUsers,
             onboardingPending,
+            invitedPending,
             attendanceToday,
             violationsMonth,
             pendingCorrections
         ] = await Promise.all([
-            User.countDocuments({ role: 'EMPLOYEE' }),
+            User.countDocuments({}),
             Branch.countDocuments(),
             User.countDocuments({ status: 'ACTIVE', isActive: true }),
-            User.countDocuments({ status: { $in: ['DEACTIVATED'] } }),
-            User.countDocuments({ status: 'ONBOARDING', onboardingCompleted: false }),
+            User.countDocuments({ status: 'DEACTIVATED' }),
+            User.countDocuments({ status: 'ONBOARDING' }),
+            User.countDocuments({ status: 'INVITED' }),
             Attendance.countDocuments({ date: { $gte: todayMidnight } }),
             Violation.countDocuments({
                 createdAt: {
@@ -226,11 +228,12 @@ exports.getDashboardOverview = async (req, res) => {
         res.status(200).json({
             success: true,
             data: {
-                totalEmployees,
+                totalUsers,
                 totalBranches,
                 activeUsers,
                 inactiveUsers,
                 onboardingPending,
+                invitedPending,
                 attendanceToday,
                 violationsThisMonth: violationsMonth,
                 pendingCorrections

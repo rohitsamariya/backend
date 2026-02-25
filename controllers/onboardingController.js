@@ -278,25 +278,30 @@ exports.saveStep7 = async (req, res) => {
         user.isActive = true;
         await user.save();
 
-        // Send Completion Email with PDF
-        try {
-            const pdfPath = await generateWelcomePDF(user, user.branch || {}, user.shift || {});
-
-            const { generateWelcomeEmail } = require('../services/emailTemplates/welcomeTemplate');
-            const html = generateWelcomeEmail(user, user.branch || {}, user.shift || {});
-
-            const attachments = [{
-                filename: 'Onboarding_Summary.pdf',
-                path: pdfPath
-            }];
-
-            await sendLifecycleEmail(user, 'COMPLETION', 'Welcome to HRMS Company – Onboarding Complete', html, attachments);
-        } catch (e) { console.error('Completion email or PDF failed:', e); }
-
+        // Respond immediately to the user
         res.status(200).json({
             success: true,
             message: 'Onboarding completed successfully. Welcome to the team!',
             requiresRelogin: true
+        });
+
+        // Background tasks: PDF & Email
+        setImmediate(async () => {
+            try {
+                const pdfPath = await generateWelcomePDF(user, user.branch || {}, user.shift || {});
+
+                const { generateWelcomeEmail } = require('../services/emailTemplates/welcomeTemplate');
+                const html = generateWelcomeEmail(user, user.branch || {}, user.shift || {});
+
+                const attachments = [{
+                    filename: 'Onboarding_Summary.pdf',
+                    path: pdfPath
+                }];
+
+                await sendLifecycleEmail(user, 'COMPLETION', 'Welcome to HRMS Company – Onboarding Complete', html, attachments);
+            } catch (e) {
+                console.error('Background Completion tasks failed:', e);
+            }
         });
     } catch (error) {
         console.error(error);

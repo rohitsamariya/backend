@@ -115,7 +115,10 @@ exports.cancelInvite = async (req, res) => {
             return res.status(404).json({ success: false, error: 'Invite not found' });
         }
 
-        // Hard delete or Mark as specific status? Hard delete for now to allow re-invite
+        // Also delete the User record if they are still in INVITED status
+        await User.findOneAndDelete({ email: invite.email, status: 'INVITED' });
+
+        // Hard delete the OfferInvite record
         await invite.deleteOne();
 
         res.status(200).json({ success: true, message: 'Invite cancelled' });

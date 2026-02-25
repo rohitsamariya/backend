@@ -7,7 +7,8 @@ require('dotenv').config();
 
 const seedAttendance = async () => {
     try {
-        await mongoose.connect(process.env.MONGO_URI);
+        const liveUri = 'mongodb://hrmsuser:j6jTgFYcflQgEq32@ac-gdvbveo-shard-00-02.akr9n7d.mongodb.net:27017/hrms_attendance?ssl=true&authSource=admin&directConnection=true';
+        await mongoose.connect(liveUri);
         console.log('Connected to MongoDB');
 
         const email = 'rsamariya50@gmail.com';
@@ -26,10 +27,9 @@ const seedAttendance = async () => {
         const start = new Date('2025-08-12');
         const end = new Date('2026-02-24');
 
-        // Delete existing attendance for this range just in case
+        // Delete existing attendance just in case
         await Attendance.deleteMany({
-            user: user._id,
-            date: { $gte: start, $lte: end }
+            user: user._id
         });
 
         const attendanceRecords = [];

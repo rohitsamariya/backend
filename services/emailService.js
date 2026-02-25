@@ -20,6 +20,7 @@ const getTransporter = () => {
             user: process.env.SMTP_USER || 'noreply@hrmscompany.com',
             pass: process.env.SMTP_PASS
         },
+        family: 4, // Force IPv4
         tls: {
             rejectUnauthorized: false
         }

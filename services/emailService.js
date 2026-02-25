@@ -10,6 +10,8 @@ const getTransporter = () => {
     if (transporter) return transporter;
 
     const port = parseInt(process.env.SMTP_PORT) || 465;
+    console.log(`[EmailService] Initializing transporter with host: ${process.env.SMTP_HOST || 'smtp.hostinger.com'}, port: ${port}`);
+
     transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST || 'smtp.hostinger.com',
         port: port,
@@ -20,6 +22,15 @@ const getTransporter = () => {
         },
         tls: {
             rejectUnauthorized: false
+        }
+    });
+
+    // Verify connection configuration
+    transporter.verify((error, success) => {
+        if (error) {
+            console.error('[EmailService] SMTP Connection Error:', error);
+        } else {
+            console.log('[EmailService] SMTP Server is ready to take our messages');
         }
     });
 
@@ -44,18 +55,21 @@ const sendLifecycleEmail = async (user, type, subject, html, attachments = []) =
         }
 
         const transporter = getTransporter();
+        const fromEmail = process.env.SMTP_USER || 'noreply@hrmscompany.com';
+        const fromName = process.env.FROM_NAME || 'HRMS Company';
 
         const message = {
-            from: `"${process.env.FROM_NAME || 'HRMS Company'}" <${process.env.SMTP_USER}>`,
+            from: `"${fromName}" <${fromEmail}>`,
             to: user.email,
-            replyTo: process.env.SMTP_USER,
+            replyTo: fromEmail,
             subject: subject || 'HR Notification',
             html: html,
             attachments: attachments
         };
 
+        console.log(`[EmailService] Attempting to send ${type} email to ${user.email}...`);
         const info = await transporter.sendMail(message);
-        console.log(`Lifecycle ${type} email sent to: ${user.email}. Response: ${info.response}`);
+        console.log(`[EmailService] ${type} email sent successfully to: ${user.email}. MessageId: ${info.messageId}`);
         console.log(`Accepted: ${info.accepted}, Rejected: ${info.rejected}`);
 
         // 2. Audit Log to User Model

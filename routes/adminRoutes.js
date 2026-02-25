@@ -58,7 +58,8 @@ const {
     createInvite,
     getInvites,
     cancelInvite,
-    updateInvite
+    updateInvite,
+    resendInvite
 } = require('../controllers/inviteController');
 
 // ... existing routes ...
@@ -67,6 +68,7 @@ const {
 router.post('/invite', authorize('ADMIN', 'HR', 'MANAGER'), createInvite);
 router.get('/invites', authorize('ADMIN', 'HR', 'MANAGER'), getInvites);
 router.put('/invite/:id', authorize('ADMIN', 'HR', 'MANAGER'), updateInvite);
+router.post('/invite/:id/resend', authorize('ADMIN', 'HR', 'MANAGER'), resendInvite);
 router.delete('/invite/:id', authorize('ADMIN', 'HR', 'MANAGER'), cancelInvite);
 
 // User Management

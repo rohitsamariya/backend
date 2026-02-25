@@ -4,6 +4,7 @@ const User = require('../models/User');
 const { sendEmail, sendOfferInvite, sendLifecycleEmail } = require('../services/emailService');
 const Branch = require('../models/Branch');
 const Shift = require('../models/Shift');
+const { generateInviteEmail } = require('../services/emailTemplates/inviteTemplate');
 
 exports.createInvite = async (req, res) => {
     try {
@@ -78,12 +79,8 @@ exports.createInvite = async (req, res) => {
         // 7. Send Email in Background
         setImmediate(async () => {
             try {
-                const branch = await Branch.findById(branchId);
                 const position = role || 'Employee';
-
-                const { generateInviteEmail } = require('../services/emailTemplates/inviteTemplate');
                 const html = generateInviteEmail(name, position, registrationLink);
-
                 await sendLifecycleEmail(user, 'INVITE', 'You’re Invited to Join HRMS Company', html);
             } catch (err) {
                 console.error('Background Invite Email Dispatch Failed:', err);
@@ -153,5 +150,33 @@ exports.updateInvite = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, error: 'Server Error updating invite' });
+    }
+};
+
+exports.resendInvite = async (req, res) => {
+    try {
+        const invite = await OfferInvite.findById(req.params.id);
+        if (!invite) return res.status(404).json({ success: false, error: 'Invite not found' });
+
+        const user = await User.findOne({ email: invite.email });
+        if (!user) return res.status(404).json({ success: false, error: 'Corresponding user record not found' });
+
+        const registrationLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/register?token=${invite.rawToken || user.inviteToken}&email=${encodeURIComponent(invite.email)}`;
+
+        // Respond immediately
+        res.status(200).json({ success: true, message: 'Resend triggered' });
+
+        // Background send
+        setImmediate(async () => {
+            try {
+                const html = generateInviteEmail(invite.name, invite.role || 'Employee', registrationLink);
+                await sendLifecycleEmail(user, 'INVITE', 'Reminder: You’re Invited to Join HRMS Company', html);
+            } catch (e) {
+                console.error('Resend invite failed:', e);
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: 'Server Error' });
     }
 };

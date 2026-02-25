@@ -48,25 +48,14 @@ exports.runCycle = async (req, res) => {
                 { status: 'FINALIZED', finalizedAt: new Date(), finalizedBy: req.user._id }
             );
 
-            // 4. Batch Send Emails (Background)
-            // We fetch all records just finalized to send emails
-            const records = await PayrollSummary.find({ branch: branchId, month: m, year: y, status: 'FINALIZED', emailSent: false });
-
-            // Parallel dispatch (can be improved with a queue, but for now we do it here)
-            const emailPromises = records.map(rec =>
-                emailService.sendPayslipEmail(rec._id)
-                    .catch(e => console.error(`Failed to send email to user ${rec.user}:`, e))
-            );
-            await Promise.allSettled(emailPromises);
-
-            // 5. Update cycle status
+            // 4. Update cycle status
             cycle.status = 'PROCESSED + SENT';
             await cycle.save();
         }
 
         res.status(200).json({
             success: true,
-            message: `Payroll cycle completed: ${cycle.processed} processed, ${cycle.failed} failed. Emails dispatched.`,
+            message: `Payroll calculations completed: ${cycle.processed} processed, ${cycle.failed} failed. Payslips are being dispatched in the background.`,
             data: cycle
         });
     } catch (error) {

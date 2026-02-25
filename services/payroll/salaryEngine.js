@@ -52,10 +52,13 @@ const payrollEmitter = new PayrollEmitter();
 payrollEmitter.on('PAYROLL_FINALIZED', async (data) => {
     try {
         const { payrollIds } = data;
-        const emailService = require('../emailService');
-        // In production, this would be pushed to a Redis/Bull queue
+        const emailService = require('./payrollEmailService');
+        // In production, this would be pushed to a Redis/Bull queue.
+        // We do it here but ensure we don't block the main flow.
         for (const id of payrollIds) {
-            await emailService.sendPayslipEmail(id).catch(err => console.error(`Email fail for ${id}:`, err));
+            await emailService.sendPayslipEmail(id).catch(err => console.error(`Background Payslip email fail for ${id}:`, err));
+            // Tiny delay to avoid SMTP rate limits when not using a real queue
+            await new Promise(r => setTimeout(r, 50));
         }
     } catch (err) {
         console.error('Background payroll notification error:', err);

@@ -68,23 +68,26 @@ exports.createInvite = async (req, res) => {
         // 5. Build Registration Link
         const registrationLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/register?token=${inviteToken}&email=${encodeURIComponent(email)}`;
 
-        // 6. Send Email via Lifecycle Service
-        try {
-            const branch = await Branch.findById(branchId);
-            const position = role || 'Employee';
-
-            const { generateInviteEmail } = require('../services/emailTemplates/inviteTemplate');
-            const html = generateInviteEmail(name, position, registrationLink);
-
-            await sendLifecycleEmail(user, 'INVITE', 'You’re Invited to Join HRMS Company', html);
-        } catch (err) {
-            console.error('Email sending failed:', err);
-        }
-
+        // 6. Respond Immediately to make UI faster
         res.status(201).json({
             success: true,
             data: user,
             registrationLink
+        });
+
+        // 7. Send Email in Background
+        setImmediate(async () => {
+            try {
+                const branch = await Branch.findById(branchId);
+                const position = role || 'Employee';
+
+                const { generateInviteEmail } = require('../services/emailTemplates/inviteTemplate');
+                const html = generateInviteEmail(name, position, registrationLink);
+
+                await sendLifecycleEmail(user, 'INVITE', 'You’re Invited to Join HRMS Company', html);
+            } catch (err) {
+                console.error('Background Invite Email Dispatch Failed:', err);
+            }
         });
 
     } catch (error) {

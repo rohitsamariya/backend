@@ -22,12 +22,19 @@ exports.saveAndClose = async (req, res) => {
         const user = await User.findById(req.user.id);
         const step = user.onboardingStep || 1;
 
-        const { generateProgressSavedEmail } = require('../services/emailTemplates/progressTemplate');
-        const html = generateProgressSavedEmail(user.name, STEP_LABELS[step], step, getResumeLink());
-
-        await sendLifecycleEmail(user, 'PROGRESS_SAVED', `Onboarding Progress Saved - Step ${step}`, html);
-
+        // Respond immediately
         res.status(200).json({ success: true, message: 'Progress saved and notification sent' });
+
+        // Send Email in background
+        setImmediate(async () => {
+            try {
+                const { generateProgressSavedEmail } = require('../services/emailTemplates/progressTemplate');
+                const html = generateProgressSavedEmail(user.name, STEP_LABELS[step], step, getResumeLink());
+                await sendLifecycleEmail(user, 'PROGRESS_SAVED', `Onboarding Progress Saved - Step ${step}`, html);
+            } catch (err) {
+                console.error('Background Progress Save Email failed:', err);
+            }
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, error: 'Server Error saving progress' });

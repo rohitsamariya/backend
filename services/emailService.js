@@ -4,20 +4,26 @@ const User = require('../models/User');
 /**
  * Configure Transporter (Hostinger)
  */
+let transporter = null;
+
 const getTransporter = () => {
+    if (transporter) return transporter;
+
     const port = parseInt(process.env.SMTP_PORT) || 465;
-    return nodemailer.createTransport({
+    transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST || 'smtp.hostinger.com',
         port: port,
-        secure: port === 465, // true for 465, false for other ports
+        secure: port === 465,
         auth: {
             user: process.env.SMTP_USER || 'noreply@hrmscompany.com',
             pass: process.env.SMTP_PASS
         },
         tls: {
-            rejectUnauthorized: false // Helps with some shared hosting certificates
+            rejectUnauthorized: false
         }
     });
+
+    return transporter;
 };
 
 /**

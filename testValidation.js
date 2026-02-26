@@ -15,12 +15,12 @@ const testValidation = async () => {
             const user = await User.create({
                 name: 'Test Validation',
                 email: email,
-                pfAccountNumber: '123', // Failing string
+                pfAccountNumber: '', // Should PASS now
                 role: 'EMPLOYEE'
             });
-            console.log('User created with empty PF');
+            console.log('✅ User created successfully with empty PF string');
         } catch (e) {
-            console.log('User creation failed as expected with empty string PF:', e.message);
+            console.log('❌ User creation failed with empty string PF:', e.message);
         }
 
         process.exit(0);

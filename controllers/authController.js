@@ -223,9 +223,10 @@ exports.login = async (req, res) => {
         }
 
         // 2. Find user (Using case-insensitive findOne more robustly)
+        const escapedEmail = email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         console.log(`[Auth] Login attempt for: ${email}`);
 
-        const user = await User.findOne({ email: new RegExp('^' + email + '$', 'i') }).select('+password');
+        const user = await User.findOne({ email: new RegExp('^' + escapedEmail + '$', 'i') }).select('+password');
 
         if (!user) {
             console.log(`[Auth] User not found: ${email}`);

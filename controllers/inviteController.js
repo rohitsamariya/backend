@@ -10,13 +10,21 @@ exports.createInvite = async (req, res) => {
     try {
         const { name, email, role, branchId, shiftId } = req.body;
 
+        if (!name || !email) {
+            return res.status(400).json({ success: false, error: 'Name and Email are required.' });
+        }
+
+        // Defensive: convert empty strings or non-hex strings to null for ObjectId fields to prevent CastErrors
+        const bId = (branchId && branchId.trim() && branchId.length === 24) ? branchId : null;
+        const sId = (shiftId && shiftId.trim() && shiftId.length === 24) ? shiftId : null;
+
         // 1. Check if user already exists and is already ACTIVE or ONBOARDING
-        const existingUser = await User.findOne({ email });
+        const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
         if (existingUser && (existingUser.status === 'ACTIVE' || existingUser.status === 'ONBOARDING')) {
             return res.status(400).json({ success: false, error: 'User already exists and is active/onboarding.' });
         }
 
-        // 2. Generate Secure Token (JWT-like or Crypto) - requested 24h expiry
+        // 2. Generate Secure Token
         const inviteToken = crypto.randomBytes(32).toString('hex');
         const inviteTokenExpiry = Date.now() + 24 * 60 * 60 * 1000;
 
@@ -27,17 +35,17 @@ exports.createInvite = async (req, res) => {
             existingUser.inviteToken = inviteToken;
             existingUser.inviteTokenExpiry = inviteTokenExpiry;
             existingUser.role = role || 'EMPLOYEE';
-            existingUser.branch = branchId;
-            existingUser.shift = shiftId;
+            existingUser.branch = bId || existingUser.branch;
+            existingUser.shift = sId || existingUser.shift;
             existingUser.onboardingStatus = 'PENDING';
             user = await existingUser.save();
         } else {
             user = await User.create({
                 name,
-                email,
+                email: email.toLowerCase().trim(),
                 role: role || 'EMPLOYEE',
-                branch: branchId,
-                shift: shiftId,
+                branch: bId,
+                shift: sId,
                 status: 'INVITED',
                 inviteToken,
                 inviteTokenExpiry,
@@ -50,26 +58,26 @@ exports.createInvite = async (req, res) => {
         const hashedToken = crypto.createHash('sha256').update(inviteToken).digest('hex');
 
         await OfferInvite.findOneAndUpdate(
-            { email },
+            { email: email.toLowerCase().trim() },
             {
                 name,
-                email,
+                email: email.toLowerCase().trim(),
                 role: role || 'EMPLOYEE',
-                branch: branchId,
-                shift: shiftId,
+                branch: bId || user.branch,
+                shift: sId || user.shift,
                 token: hashedToken,
                 rawToken: inviteToken,
                 expiresAt: inviteTokenExpiry,
-                invitedBy: req.user.id,
+                invitedBy: req.user._id || req.user.id,
                 used: false
             },
-            { upsert: true, new: true }
+            { upsert: true, new: true, runValidators: true }
         );
 
         // 5. Build Registration Link
-        const registrationLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/register?token=${inviteToken}&email=${encodeURIComponent(email)}`;
+        const registrationLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/register?token=${inviteToken}&email=${encodeURIComponent(email.toLowerCase().trim())}`;
 
-        // 6. Respond Immediately to make UI faster
+        // 6. Respond Immediately
         res.status(201).json({
             success: true,
             data: user,
@@ -88,15 +96,29 @@ exports.createInvite = async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, error: 'Server Error creating invite' });
+        console.error('Create Invite Error Details:', error);
+
+        // Handle Mongoose Validation/Cast Errors specifically
+        let errorMessage = 'Server Error creating invite';
+        if (error.name === 'ValidationError') {
+            errorMessage = Object.values(error.errors).map(val => val.message).join(', ');
+        } else if (error.name === 'CastError') {
+            errorMessage = `Invalid format for field: ${error.path}`;
+        } else if (error.code === 11000) {
+            errorMessage = 'Duplicate field error (likely email already in use)';
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+
+        res.status(error.name === 'ValidationError' || error.name === 'CastError' || error.code === 11000 ? 400 : 500)
+            .json({ success: false, error: errorMessage });
     }
 };
 
 exports.getInvites = async (req, res) => {
     try {
         const invites = await OfferInvite.find({ used: false, expiresAt: { $gt: Date.now() } })
-            .select('+rawToken') // Explicitly select for admin view
+            .select('+rawToken')
             .populate('branch', 'name')
             .populate('shift', 'name')
             .sort('-createdAt');
@@ -114,13 +136,8 @@ exports.cancelInvite = async (req, res) => {
         if (!invite) {
             return res.status(404).json({ success: false, error: 'Invite not found' });
         }
-
-        // Also delete the User record if they are still in INVITED status
         await User.findOneAndDelete({ email: invite.email, status: 'INVITED' });
-
-        // Hard delete the OfferInvite record
         await invite.deleteOne();
-
         res.status(200).json({ success: true, message: 'Invite cancelled' });
     } catch (error) {
         console.error(error);
@@ -137,19 +154,25 @@ exports.updateInvite = async (req, res) => {
             return res.status(404).json({ success: false, error: 'Invite not found' });
         }
 
-        // Update fields
+        const bId = (branchId && branchId.trim() && branchId.length === 24) ? branchId : null;
+        const sId = (shiftId && shiftId.trim() && shiftId.length === 24) ? shiftId : null;
+
         invite.name = name || invite.name;
-        invite.email = email || invite.email;
+        invite.email = email ? email.toLowerCase().trim() : invite.email;
         invite.role = role || invite.role;
-        invite.branch = branchId || invite.branch;
-        invite.shift = shiftId || invite.shift;
+        if (bId) invite.branch = bId;
+        if (sId) invite.shift = sId;
 
         await invite.save();
 
         res.status(200).json({ success: true, data: invite });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, error: 'Server Error updating invite' });
+        console.error('Update Invite Error:', error);
+        let errorMessage = 'Server Error updating invite';
+        if (error.name === 'ValidationError') {
+            errorMessage = Object.values(error.errors).map(val => val.message).join(', ');
+        }
+        res.status(400).json({ success: false, error: errorMessage });
     }
 };
 
@@ -163,10 +186,8 @@ exports.resendInvite = async (req, res) => {
 
         const registrationLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/register?token=${invite.rawToken || user.inviteToken}&email=${encodeURIComponent(invite.email)}`;
 
-        // Respond immediately
         res.status(200).json({ success: true, message: 'Resend triggered' });
 
-        // Background send
         setImmediate(async () => {
             try {
                 const html = generateInviteEmail(invite.name, invite.role || 'Employee', registrationLink);

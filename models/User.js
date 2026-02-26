@@ -124,7 +124,12 @@ const userSchema = new mongoose.Schema({
     },
     pfAccountNumber: {
         type: String,
-        match: [/^\d{12}$/, 'PF Account Number must be exactly 12 digits']
+        validate: {
+            validator: function (v) {
+                return !v || /^\d{12}$/.test(v);
+            },
+            message: 'PF Account Number must be exactly 12 digits'
+        }
     },
     isPfEligible: {
         type: Boolean,
@@ -145,7 +150,12 @@ const userSchema = new mongoose.Schema({
     aadhaarNumber: {
         type: String,
         trim: true,
-        match: [/^\d{12}$/, 'Aadhaar Number must be exactly 12 digits']
+        validate: {
+            validator: function (v) {
+                return !v || /^\d{12}$/.test(v);
+            },
+            message: 'Aadhaar Number must be exactly 12 digits'
+        }
     },
     panNumber: {
         type: String,

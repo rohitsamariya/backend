@@ -44,7 +44,8 @@ const app = express();
 // 4. Performance & Security Middleware
 app.set('trust proxy', 1); // Enable if behind a reverse proxy (like Render)
 app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginEmbedderPolicy: false
 }));
 app.use(compression());
 app.use(express.json());

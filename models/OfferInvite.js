@@ -21,13 +21,11 @@ const offerInviteSchema = new mongoose.Schema({
     },
     branch: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Branch',
-        required: true
+        ref: 'Branch'
     },
     shift: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Shift',
-        required: true
+        ref: 'Shift'
     },
     token: {
         type: String,

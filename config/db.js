@@ -9,9 +9,12 @@ const connectDB = async () => {
     }
 
     const connOptions = {
-        serverSelectionTimeoutMS: 10000, // Give more time for replica set discovery
-        connectTimeoutMS: 10000,
+        // Essential for Atlas Replica Sets
+        serverSelectionTimeoutMS: 30000,
+        heartbeatFrequencyMS: 10000,
         socketTimeoutMS: 45000,
+        family: 4, // Force IPv4 to avoid DNS delays
+        autoIndex: process.env.NODE_ENV !== 'production'
     };
 
     const maxRetries = 5;
@@ -19,13 +22,27 @@ const connectDB = async () => {
 
     while (retries < maxRetries) {
         try {
-            console.log(`Connecting to MongoDB... (Attempt ${retries + 1}/${maxRetries})`);
+            console.log(`[DB] Connecting to MongoDB (Attempt ${retries + 1}/${maxRetries})...`);
+
+            // If the URI is a shard URI with directConnection=true, warn about it
+            if (MONGO_URI.includes('directConnection=true')) {
+                console.warn('⚠️ WARNING: MONGO_URI contains directConnection=true. This will prevent writes if the node is not Primary.');
+            }
+
             const conn = await mongoose.connect(MONGO_URI, connOptions);
-            console.log(`✅ MongoDB connected successfully: ${conn.connection.host}`);
+            console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+
+            // Check if we are connected to a Primary
+            const admin = conn.connection.db.admin();
+            const status = await admin.serverStatus();
+            if (status.repl && !status.repl.ismaster && !status.repl.isWritablePrimary) {
+                console.warn('⚠️ WARNING: Connected to a SECONDARY node. Writes may fail.');
+            }
+
             return;
         } catch (error) {
             retries++;
-            console.error(`❌ MongoDB connection attempt ${retries} failed:`, error.message);
+            console.error(`❌ MongoDB Connection Error (Attempt ${retries}):`, error.message);
 
             if (retries >= maxRetries) {
                 console.error('FATAL: Could not connect to MongoDB after 5 attempts.');

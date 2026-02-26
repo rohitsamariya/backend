@@ -215,28 +215,36 @@ exports.verifyInvite = async (req, res) => {
 exports.login = async (req, res) => {
     try {
         const { password } = req.body;
-        const email = req.body.email ? req.body.email.toLowerCase() : '';
+        const email = (req.body.email || '').toLowerCase().trim();
 
         // 1. Validate fields
         if (!email || !password) {
             return res.status(400).json({ success: false, error: 'Please provide email and password' });
         }
 
-        // 2. Find user (Case Insensitive)
+        // 2. Find user (Using case-insensitive findOne more robustly)
+        console.log(`[Auth] Login attempt for: ${email}`);
+
         const user = await User.findOne({ email: new RegExp('^' + email + '$', 'i') }).select('+password');
+
         if (!user) {
+            console.log(`[Auth] User not found: ${email}`);
             return res.status(401).json({ success: false, error: 'Invalid credentials' });
         }
 
         // 3. Match Password
         if (!user.password) {
+            console.error(`[Auth] User ${email} has no password set in database.`);
             return res.status(401).json({ success: false, error: 'Invalid credentials' });
         }
 
         const isMatch = await user.matchPassword(password);
         if (!isMatch) {
+            console.log(`[Auth] Password mismatch for: ${email}`);
             return res.status(401).json({ success: false, error: 'Invalid credentials' });
         }
+
+        console.log(`[Auth] Login successful for: ${email} (Role: ${user.role})`);
 
         // 4. Check Activity & Status
         if (user.status === 'DEACTIVATED' || user.isActive === false) {

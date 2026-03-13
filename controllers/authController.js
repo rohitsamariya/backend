@@ -330,20 +330,19 @@ exports.forgotPassword = async (req, res) => {
         // Create Reset URL
         const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
 
-        // Send Email
-        try {
-            const html = generateResetPasswordEmail(user.name, resetUrl);
-            await sendLifecycleEmail(user, 'RESET_PASSWORD', 'Password Reset Request', html);
-
-            res.status(200).json({ success: true, message: 'Email sent' });
-        } catch (err) {
-            console.error('Reset Email Error:', err);
+        // Send Email Asynchronously
+        // We don't await this so the UI responds instantly
+        const html = generateResetPasswordEmail(user.name, resetUrl);
+        sendLifecycleEmail(user, 'RESET_PASSWORD', 'Password Reset Request', html).catch(async (err) => {
+            console.error('Background Reset Email Error:', err);
+            // Revert token if email failed, doing this silently in background
             user.resetPasswordToken = undefined;
             user.resetPasswordExpire = undefined;
-            await user.save({ validateBeforeSave: false });
+            await user.save({ validateBeforeSave: false }).catch(saveErr => console.error('Token revert failed', saveErr));
+        });
 
-            res.status(500).json({ success: false, error: 'Email could not be sent' });
-        }
+        // Respond immediately to the frontend
+        res.status(200).json({ success: true, message: 'Email sent successfully. Please check your inbox.' });
 
     } catch (error) {
         console.error(error);

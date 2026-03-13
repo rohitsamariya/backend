@@ -26,7 +26,7 @@ const holidaySchema = new mongoose.Schema({
     }
 });
 
-// Prevent duplicate dates
-holidaySchema.index({ date: 1 }, { unique: true });
+// Prevent duplicate dates is already handled by unique: true in the schema definition above.
+
 
 module.exports = mongoose.model('Holiday', holidaySchema);

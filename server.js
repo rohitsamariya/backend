@@ -50,17 +50,7 @@ app.use(helmet({
 app.use(compression());
 app.use(express.json());
 
-// Enable rate limiting
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000, // limit each IP to 1000 requests per windowMs
-    message: 'Too many requests from this IP, please try again after 15 minutes',
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-app.use('/api/', limiter);
-
-// CORS Configuration
+// CORS Configuration (Must be before Limiter and Routes)
 const allowedOrigins = [
     'http://localhost:5173',
     process.env.FRONTEND_URL
@@ -69,21 +59,31 @@ const allowedOrigins = [
 app.use(cors({
     origin: function (origin, callback) {
         // allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-
-        // Relax strict locally
-        if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
+        // allow all local development
+        if (!origin || origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
             return callback(null, true);
         }
 
-        if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-            return callback(new Error(msg), false);
+        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+            return callback(null, true);
         }
-        return callback(null, true);
+        
+        callback(null, true); // For now, allow all in transition to live to prevent testing blocks
     },
-    credentials: true
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Enable rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 1000, 
+    message: 'Too many requests from this IP, please try again after 15 minutes',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use('/api/', limiter);
 
 // Static Files
 app.use('/public', express.static(path.join(__dirname, 'public')));

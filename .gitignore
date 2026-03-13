@@ -46,3 +46,8 @@ Thumbs.db
 # Logs
 logs/
 *.log
+
+# DB Seeds
+seeds/
+scripts/seedAdmin.js
+seedAttendanceData.js

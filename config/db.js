@@ -46,6 +46,9 @@ const connectDB = async () => {
 
             if (retries >= maxRetries) {
                 console.error('FATAL: Could not connect to MongoDB after 5 attempts.');
+                if (error.message.includes('selection timed out')) {
+                    console.error('👉 TIP: This usually means you need to whitelist Render IP in MongoDB Atlas (Network Access -> Add 0.0.0.0/0).');
+                }
                 process.exit(1);
             }
 

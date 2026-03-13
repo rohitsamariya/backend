@@ -23,6 +23,21 @@ class PayrollEmailService {
                 rejectUnauthorized: false
             }
         });
+
+        // Verify connection configuration
+        this.transporter.verify((error, success) => {
+            if (error) {
+                console.error('[PayrollEmailService] !!! SMTP Connection Error:', error.message);
+                console.error('[PayrollEmailService] Debug Info:', {
+                    host: process.env.SMTP_HOST || 'smtp.hostinger.com',
+                    port: port,
+                    user: process.env.SMTP_USER,
+                    hasPass: !!process.env.SMTP_PASS
+                });
+            } else {
+                console.log('[PayrollEmailService] SMTP Server is ready (verified)');
+            }
+        });
     }
 
     /**

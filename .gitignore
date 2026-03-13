@@ -51,3 +51,24 @@ logs/
 seeds/
 scripts/seedAdmin.js
 seedAttendanceData.js
+
+# Scripts with hardcoded credentials (security)
+checkAttendanceLive.js
+checkBranchConfig.js
+checkEmailLog.js
+checkEmailLogDetails.js
+checkPayrollSummaries.js
+checkSalaryStructure.js
+checkUserDataLive.js
+checkUserLiveCustom.js
+checkUserLocalPrefix.js
+check_status.js
+simulateLiveLogin.js
+forceRecalculate.js
+testEmail.js
+testInviteLogic.js
+testLogin.js
+testPayrollCalc.js
+testValidation.js
+test_user.js
+updateUserJoiningDate.js

@@ -784,7 +784,7 @@ exports.uploadProfileImage = async (req, res) => {
         }
 
         // Store relative path for frontend access
-        user.profileImage = `/uploads/profile-images/${req.file.filename}`;
+        user.profileImage = req.file.path;
         await user.save();
 
         res.status(200).json({
@@ -814,7 +814,7 @@ exports.uploadDocument = async (req, res) => {
 
         const newDoc = {
             type,
-            fileUrl: `/uploads/documents/${req.file.filename}`,
+            fileUrl: req.file.path,
             uploadedAt: new Date()
         };
 

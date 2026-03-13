@@ -185,7 +185,7 @@ exports.updateProfileImage = async (req, res) => {
         }
 
         // Save relative path (without /api or full hostname)
-        const relativePath = `/uploads/profile-images/${req.file.filename}`;
+        const relativePath = req.file.path;
         user.profileImage = relativePath;
         await user.save();
 

@@ -54,7 +54,7 @@ exports.completeOnboarding = async (req, res) => {
                 const docIdx = user.documents.findIndex(d => d.type === type);
                 const docData = {
                     type,
-                    fileUrl: `/uploads/documents/${file.filename}`,
+                    fileUrl: file.path,
                     originalName: file.originalname,
                     uploadedAt: new Date()
                 };
@@ -66,12 +66,12 @@ exports.completeOnboarding = async (req, res) => {
             };
 
             if (req.files.profilePhoto) {
-                user.profileImage = `/uploads/profile-images/${req.files.profilePhoto[0].filename}`;
+                user.profileImage = req.files.profilePhoto[0].path;
                 user.profilePhoto = user.profileImage; // Legacy
             }
             if (req.files.aadhaarPhoto) {
                 upsertDoc('AADHAAR', req.files.aadhaarPhoto[0]);
-                user.aadhaarPhoto = `/uploads/documents/${req.files.aadhaarPhoto[0].filename}`;
+                user.aadhaarPhoto = req.files.aadhaarPhoto[0].path;
             }
 
             console.log("One-shot Onboarding Documents Saved:", user.documents);

@@ -29,9 +29,15 @@ const getTransporter = () => {
     // Verify connection configuration
     transporter.verify((error, success) => {
         if (error) {
-            console.error('[EmailService] SMTP Connection Error:', error);
+            console.error('[EmailService] !!! SMTP Connection Error:', error.message);
+            console.error('[EmailService] Debug Info:', {
+                host: process.env.SMTP_HOST || 'smtp.hostinger.com',
+                port: port,
+                user: process.env.SMTP_USER || 'noreply@hrmscompany.com',
+                hasPass: !!process.env.SMTP_PASS
+            });
         } else {
-            console.log('[EmailService] SMTP Server is ready to take our messages');
+            console.log('[EmailService] SMTP Server is ready (verified)');
         }
     });
 

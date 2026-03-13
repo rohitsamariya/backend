@@ -228,7 +228,7 @@ exports.saveStep6 = async (req, res) => {
                 const docIdx = user.documents.findIndex(d => d.type === type);
                 const docData = {
                     type,
-                    fileUrl: `/uploads/documents/${file.filename}`,
+                    fileUrl: file.path,
                     originalName: file.originalname,
                     uploadedAt: new Date()
                 };
@@ -244,7 +244,7 @@ exports.saveStep6 = async (req, res) => {
             if (req.files.bankProof) upsertDoc('BANK_PROOF', req.files.bankProof[0]);
             if (req.files.educationCert) upsertDoc('EDUCATION', req.files.educationCert[0]);
             if (req.files.licenceCert) upsertDoc('LICENCE', req.files.licenceCert[0]);
-            if (req.files.profilePhoto) user.profileImage = `/uploads/profile-images/${req.files.profilePhoto[0].filename}`;
+            if (req.files.profilePhoto) user.profileImage = req.files.profilePhoto[0].path;
         }
 
         if (user.onboardingStep === 6) {

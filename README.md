@@ -190,8 +190,13 @@ JWT_SECRET=your_super_secure_secret_key
 SMTP_HOST=smtp.hostinger.com
 SMTP_PORT=465
 SMTP_USER=noreply@yourdomain.com
-SMTP_PASS=your_smtp_password
+SMTP_PASS=your_password
 FROM_NAME=Your Company Name
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 ```
 
 > ⚠️ **Never commit your `.env` file.** It is already included in `.gitignore`.
